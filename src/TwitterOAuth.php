@@ -757,7 +757,7 @@ class TwitterOAuth extends Config
     private function isJsonResponse()
     {
         $headers = $this->response->getsHeaders();
-        if(isset($headers['content_type']) && strpos('application/json', $headers['content_type']) !== false){
+        if(isset($headers['content_type']) && strpos($headers['content_type'], 'application/json') !== false){
             return true;
         }
         return false;
