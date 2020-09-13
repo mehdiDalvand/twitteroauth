@@ -470,13 +470,13 @@ class TwitterOAuth extends Config
      *
      * Make requests and retry them (if enabled) in case of Twitter's problems.
      *
-     * @param string $method
      * @param string $url
      * @param string $method
-     * @param array  $parameters
-     * @param bool   $json
+     * @param array $parameters
+     * @param bool $json
      *
      * @return array|object
+     * @throws TwitterOAuthException
      */
     private function makeRequests(
         string $url,
@@ -488,7 +488,7 @@ class TwitterOAuth extends Config
             $this->sleepIfNeeded();
             $result = $this->oAuthRequest($url, $method, $parameters, $json);
             $response = $result;
-            if($this->isJsonResponse()){
+            if ($this->isJsonResponse()) {
                 $response = JsonDecoder::decode($result, $this->decodeJsonAsArray);
             }
             $this->response->setBody($response);
@@ -739,13 +739,14 @@ class TwitterOAuth extends Config
         /* Use CACert file when not in a PHAR file. */
         return !$this->pharRunning();
     }
-    
+
     /**
      * download dm files
      * @param $url
      * @return array|object|string
+     * @throws TwitterOAuthException
      */
-    public function getDMFiles($url):string 
+    public function getDMFiles($url): string
     {
         return $this->makeRequests($url, 'GET', [], false);
     }
@@ -757,7 +758,7 @@ class TwitterOAuth extends Config
     private function isJsonResponse()
     {
         $headers = $this->response->getsHeaders();
-        if(isset($headers['content_type']) && strpos($headers['content_type'], 'application/json') !== false){
+        if (isset($headers['content_type']) && strpos($headers['content_type'], 'application/json') !== false) {
             return true;
         }
         return false;

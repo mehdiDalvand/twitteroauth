@@ -17,6 +17,7 @@ class JsonDecoder
      */
     public static function decode(string $string, bool $asArray)
     {
+        $string = htmlspecialchars_decode($string);
         if (
             version_compare(PHP_VERSION, '5.4.0', '>=') &&
             !(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)
