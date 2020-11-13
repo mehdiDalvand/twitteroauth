@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Abraham\TwitterOAuth;
 
 use Abraham\TwitterOAuth\Util\JsonDecoder;
+use Composer\CaBundle\CaBundle;
 
 /**
  * TwitterOAuth class for interacting with the Twitter API.
@@ -571,6 +572,7 @@ class TwitterOAuth extends Config
      */
     private function curlOptions(): array
     {
+        $bundlePath = CaBundle::getSystemCaRootBundlePath();
         $options = [
             // CURLOPT_VERBOSE => true,
             CURLOPT_CONNECTTIMEOUT => $this->connectionTimeout,
@@ -580,12 +582,8 @@ class TwitterOAuth extends Config
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_TIMEOUT => $this->timeout,
             CURLOPT_USERAGENT => $this->userAgent,
+            $this->curlCaOpt($bundlePath) => $bundlePath,
         ];
-
-        if ($this->useCAFile()) {
-            $options[CURLOPT_CAINFO] =
-                __DIR__ . DIRECTORY_SEPARATOR . 'cacert.pem';
-        }
 
         if ($this->gzipEncoding) {
             $options[CURLOPT_ENCODING] = 'gzip';
@@ -697,7 +695,7 @@ class TwitterOAuth extends Config
         $headers = [];
         foreach (explode("\r\n", $header) as $line) {
             if (strpos($line, ':') !== false) {
-                list($key, $value) = explode(': ', $line);
+                [$key, $value] = explode(': ', $line);
                 $key = str_replace('-', '_', strtolower($key));
                 $headers[$key] = trim($value);
             }
@@ -720,24 +718,14 @@ class TwitterOAuth extends Config
     }
 
     /**
-     * Is the code running from a Phar module.
+     * Get Curl CA option based on whether the given path is a directory or file.
      *
-     * @return boolean
+     * @param string $path
+     * @return int
      */
-    private function pharRunning(): bool
+    private function curlCaOpt(string $path): int
     {
-        return class_exists('Phar') && \Phar::running(false) !== '';
-    }
-
-    /**
-     * Use included CA file instead of OS provided list.
-     *
-     * @return boolean
-     */
-    private function useCAFile(): bool
-    {
-        /* Use CACert file when not in a PHAR file. */
-        return !$this->pharRunning();
+        return is_dir($path) ? CURLOPT_CAPATH : CURLOPT_CAINFO;
     }
 
     /**
